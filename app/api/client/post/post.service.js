@@ -176,7 +176,7 @@ export const update = async (args = {}) => {
         } = arg;
 
         if (validateInputString(title)) throw new Error('POST.ERROR.CREATE.INVALID_TITLE');
-        if (condition !== '1') throw new Error('POST.ERROR.CREATE.NEED_TO_CONFIRM_TERMS')
+        // if (condition !== '1') throw new Error('POST.ERROR.CREATE.NEED_TO_CONFIRM_TERMS')
         return {
             title,
             user,
@@ -198,11 +198,15 @@ export const update = async (args = {}) => {
         code,
     } = await validateArgs(args);
 
+    const checkUser = await User.findOne({_id: args.userInfo._id}).populate(
+        ['role', 'faculty']
+    );
+
     const checkAcademicYear = await AcademicYear.findOne({status: 'Active'})
     const FinalClosureDate = checkAcademicYear.finalClosureDate
     const today = new Date()
     const diffTime = FinalClosureDate.getTime() - today.getTime()
-    if (diffTime <= 0) throw new Error('POST.ERROR.EDIT.TIME_OUT')
+    if (diffTime <= 0 && checkUser.role.role !== 'coordinator') throw new Error('POST.ERROR.EDIT.TIME_OUT')
 
     const data = await Post.findOne({_id: args.postId});
     console.log(data)
